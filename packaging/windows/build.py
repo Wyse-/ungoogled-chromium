@@ -56,6 +56,7 @@ def _run_build_process(*args, **kwargs):
     """
     # Add call to set VC variables
     cmd_input = ['call "%s" >nul' % _get_vcvars_path()]
+    cmd_input.append('cd "%s"' %os.getcwd())
     cmd_input.append(' '.join(map('"{}"'.format, args)))
     cmd_input.append('exit\n')
     subprocess.run(('cmd.exe', '/k'),
