@@ -24,3 +24,6 @@ third_party/fontconfig/BUILD.gn
 third_party/yasm/yasm_assemble.gni
 
 third_party/yasm/run_yasm.py
+
+tools/gn/base/numerics/safe_math_arm_impl.h
+tools/gn/base/numerics/safe_conversions_arm_impl.h

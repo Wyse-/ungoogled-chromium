@@ -1,7 +1,12 @@
-debian/disable/openh264.patch
+debian_buster/disable/openh264.patch
 
-debian/system/ffmpeg34.patch
-debian/system/openjpeg.patch
-debian/debianization/master-preferences.patch
+debian_buster/system/ffmpeg34.patch
+debian_buster/system/harfbuzz.patch
+debian_buster/system/openjpeg.patch
+debian_buster/system/convertutf.patch
 
+debian_buster/debianization/sandbox.patch
+debian_buster/debianization/master-preferences.patch
+
+ungoogled-chromium/linux/fix-nullptr-t-namespace.patch
 ungoogled-chromium/linux/manpage.patch

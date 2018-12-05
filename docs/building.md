@@ -6,9 +6,11 @@ For configurations, you may try augmenting the standard Chromium build procedure
 
 ## IMPORTANT - Please read this section first
 
-**Statuses of platform support**: Because platform support varies across stable versions, [this Wiki page tracks platform support for the current stable](//github.com/Eloston/ungoogled-chromium/wiki/statuses). *Please check the status before attempting a build or posting an issue*.
+**Choosing a version**: *It is highly recommended to choose a tag version for building.* `master` and other branches are not guaranteed to be in a working state.
 
-**Choosing a version**: *It is highly recommended to choose a tag version for building.* `master` and other branches are not guarenteed to be in a working state.
+**Use the documentation included with the code you downloaded**. The documentation in the `master` branch changes frequently, and may not correspond to the code you downloaded.
+
+**Statuses of platform support**: Because platform support varies across stable versions, [this Wiki page tracks platform support for the current stable](//github.com/Eloston/ungoogled-chromium/wiki/statuses). *Please check the status before attempting a build or posting an issue*.
 
 ## Contents
 
@@ -32,17 +34,36 @@ The final size of the sandbox with build artifacts is over 5 GB. On 64-bit syste
 ### Hardware requirements
 
 * For 64-bit systems, at least 8 GB of RAM is highly recommended (as recommended in the Chromium source tree under `docs/linux_build_instructions.md`).
-    * It may be possible to reduce RAM comsumption with a lower value for the GN flag `jumbo_file_merge_limit` (documented in the Chromium source code under `docs/jumbo.md`).
+    * It may be possible to reduce RAM consumption with a lower value for the GN flag `jumbo_file_merge_limit` (documented in the Chromium source code under `docs/jumbo.md`).
     * Debian's `chromium` package version `69.0.3497.81-1` uses a value of: 12
 * Filesystem space: 8 GB is the bare minimum. More is safer.
 
-### Setting up the build environment
+### Determining the packaging type
 
-Install base requirements: `# apt install packaging-dev python3 ninja-build`
+You will need to select a *packaging type*, which is a set of packaging files for a certain target system (e.g. a Debian-based distribution name and version). This will be used in the following sections to configure building.
 
-On Debian 9 (stretch), `stretch-backports` APT source is used to obtain LLVM 6.0. Do NOT use debhelper 11 from backports, as it will be incompatible with other dpkg tools.
+Packaging types are identified by a short string. The following is a list of all Debian-based packaging types:
+
+* `debian_stretch` for Debian 9 (stretch)
+* `debian_buster` for Debian 10 (buster)
+* `ubuntu_bionic` for Ubuntu 18.04 LTS (bionic)
+* `ubuntu_cosmic` for Ubuntu 18.10 (cosmic)
+* `debian_minimal` for any other Debian-based system that isn't based on one of the above versions.
+
+All Debian-based packaging types require LLVM 7, except `debian_minimal`. `debian_minimal` requires LLVM 8.
+
+* On Debian 9 (stretch), LLVM 7 can be backported from buster without modifications.
+* Pre-built LLVM toolchains are available from [apt.llvm.org](https://apt.llvm.org).
+    * Note that the APT URLs for development (aka nightly snapshot) LLVM versions *do not contain* the LLVM version in them.
+* You may use newer LLVM versions by adjusting `debian/rules` and `debian/control` accordingly. However, there are caveats; see the LLVM requirements under [Any Linux distribution](#any-linux-distribution) for more details.
 
 ### Building locally
+
+*Download and build .deb packages all in the same environment*
+
+First, install base requirements: `# apt install packaging-dev python3 ninja-build`
+
+Then, run the following as a regular user:
 
 ```sh
 # Run from inside the clone of the repository
@@ -50,29 +71,30 @@ mkdir -p build/src
 ./get_package.py PACKAGE_TYPE_HERE build/src/debian
 cd build/src
 # Use dpkg-checkbuilddeps (from dpkg-dev) or mk-build-deps (from devscripts) to check for additional packages.
-# If necessary, change the dependencies in debian/control to accomodate your environment.
+# If necessary, change the dependencies in debian/control to accommodate your environment.
 # If necessary, modify AR, NM, CC, and CXX variables in debian/rules
 debian/rules setup-local-src
 dpkg-buildpackage -b -uc
 ```
 
-where `PACKAGE_TYPE_HERE` is one of the following:
+where `PACKAGE_TYPE_HERE` is one of the packaging types listed above.
 
-* `debian_stretch` for Debian 9 (stretch)
-* `debian_buster` for Debian 10 (buster)
-* `ubuntu_bionic` for Ubuntu 18.04 (bionic)
-* `debian_minimal` for any other Debian-based system that isn't based on one of the above versions.
-
-Packages will appear under `build/`.
+Packages will appear under `build/`
 
 ### Building via source package
+
+*Build via a Debian source package (i.e. `.dsc`, `.orig.tar.xz`, and `.debian.tar.xz`). This is useful for online build services like Launchpad and openSUSE Build Service.*
+
+First, install base requirements: `# apt install packaging-dev python3`
+
+Then, run the following as a regular user:
 
 ```sh
 # Run from inside the clone of the repository
 mkdir -p build/src
 ./get_package.py PACKAGE_TYPE_HERE build/src/debian
 cd build/src
-# If necessary, change the dependencies in debian/control to accomodate your environment.
+# If necessary, change the dependencies in debian/control to accommodate your environment.
 # If necessary, modify AR, NM, CC, and CXX variables in debian/rules
 debian/rules get-orig-source
 debuild -S -sa
@@ -80,7 +102,7 @@ debuild -S -sa
 
 (`PACKAGE_TYPE_HERE` is the same as above)
 
-Source package files should appear in `build/`
+Source package files will appear under `build/`
 
 ## Windows
 
@@ -94,7 +116,7 @@ NOTE: The default configuration will build 64-bit binaries for maximum security 
 
 [Follow the official Windows build instructions](https://chromium.googlesource.com/chromium/src/+/64.0.3282.168/docs/windows_build_instructions.md#visual-studio).
 
-**IMPORTANT**: According to [a Chromium developer in Google Groups](https://groups.google.com/a/chromium.org/d/msg/chromium-dev/PsqFiJ-j5B4/9wO3wflWCQAJ), due to bugs in the 10.0.16299.15 SDK (that comes with Visual Studio 2017 as of Feburary 2018) *will not work* to build Chromium. The 10.0.15063 SDK must be downloaded and installed. This can be downloaded from the [Windows SDK Archive](https://developer.microsoft.com/en-us/windows/downloads/sdk-archive).
+**IMPORTANT**: According to [a Chromium developer in Google Groups](https://groups.google.com/a/chromium.org/d/msg/chromium-dev/PsqFiJ-j5B4/9wO3wflWCQAJ), due to bugs in the 10.0.16299.15 SDK (that comes with Visual Studio 2017 as of February 2018) *will not work* to build Chromium. The 10.0.15063 SDK must be downloaded and installed. This can be downloaded from the [Windows SDK Archive](https://developer.microsoft.com/en-us/windows/downloads/sdk-archive).
 
 When installing the SDK, the "Debugging Tools for Windows" feature must be enabled. Visual Studio 2017 does not enable this by default, so it has to be added in by selecting "Modify" on the SDK entry in "Add or remove programs".
 
@@ -150,7 +172,7 @@ cd build/src
 ./ungoogled_packaging/build.sh
 ```
 
-A `.dmg` should appear in `build/`
+A `.dmg` should appear in `build/src/ungoogled_packaging/`
 
 ## Arch Linux
 
@@ -227,7 +249,7 @@ These instructions will build packages compatible with any Linux distribution th
 ### Hardware requirements
 
 * For 64-bit systems, at least 8 GB of RAM is highly recommended (per the document in the Chromium source tree under `docs/linux_build_instructions.md`).
-    * It may be possible to reduce RAM comsumption with a lower value for the GN flag `jumbo_file_merge_limit` (documented in the Chromium source code under `docs/jumbo.md`).
+    * It may be possible to reduce RAM consumption with a lower value for the GN flag `jumbo_file_merge_limit` (documented in the Chromium source code under `docs/jumbo.md`).
 * At least 8 GB of filesystem space. 16 GB should be safe.
 
 ### Software requirements
@@ -237,12 +259,18 @@ TODO: Document all libraries and tools needed to build. For now, see the build d
 * Python 3 (tested on 3.5) for buildkit
 * Python 2 (tested on 2.7) for building GN and running other build-time scripts
 * [Ninja](//ninja-build.org/) for running the build command
-* LLVM 7.0 or 8.0 (including Clang and LLD)
+* One of the following LLVM toolchain versions (which include Clang and LLD):
+    * The latest stable LLVM version
+    * A build of the LLVM revision used by Google to build Chromium. This is specified in the Chromium source tree under `tools/clang/scripts/update.py` in the constant `CLANG_REVISION`. (For more info about how Google manages its prebuilt LLVM toolchain, see the file in the Chromium source tree `docs/updating_clang.md`)
+    * A nightly snapshot LLVM build, available from [the LLVM apt repo](//apt.llvm.org). However, this may result in instability.
+
+    Note that any other LLVM version may outright fail, or [cause unexpected behavior](https://github.com/Eloston/ungoogled-chromium/issues/586).
 
 For Debian-based systems:
 
-1. Add the [the LLVM APT repo](//apt.llvm.org/) for the appropriate LLVM version.
-2. `# apt install clang-7.0 lld-7.0 llvm-7.0-dev python python3 ninja-build`
+1. Add the [the LLVM APT repo](//apt.llvm.org/) for the appropriate LLVM version (currently 8).
+    * Note that the APT URLs for development (aka nightly snapshot) LLVM versions *do not contain* the LLVM version in them.
+2. `# apt install clang-8 lld-8 llvm-8-dev python python3 ninja-build`
 
 ### Build a tar archive
 
@@ -259,6 +287,14 @@ cd build/src
 
 A compressed tar archive will appear in `build/src/ungoogled_packaging/`
 
-### Building an AppImage, Flatpak, or Snap package
+### Building an AppImage
 
-TODO. See [Issue #36](//github.com/Eloston/ungoogled-chromium/issues/36)
+First, follow the instructions in [Build a tar archive](#build-a-tar-archive).
+
+Then, run the following:
+
+```
+./ungoogled_packaging/package.appimage.sh
+```
+
+An `.AppImage` file will appear in `build/src/ungoogled_packaging/`

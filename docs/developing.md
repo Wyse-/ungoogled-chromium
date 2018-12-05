@@ -4,6 +4,13 @@ This document contains an assortment of information for those who want to develo
 
 Information targeted towards developers *and* other users live in [the Wiki](//ungoogled-software.github.io/ungoogled-chromium-wiki/).
 
+Contents:
+
+* [Branches](#branches)
+* [Adding command-line flags and chrome://flags options](#adding-command-line-flags-and-chromeflags-options)
+* [Workflow of updating patches](#workflow-of-updating-patches)
+* [Updating Debian patches and packaging files](#updating-debian-patches-and-packaging-files)
+
 ## Branches
 
 Development is focused on `master`, and any changes in there should not break anything unless platforms break during a Chromium version rebase.
@@ -42,7 +49,7 @@ This is an example workflow on Linux that can be modified for your specific usag
 
 ### Downloading the source code and updating lists
 
-The utility `devutils/update_lists.py` automates this process. By default, it will update the `common` base bundle automatically. Pass in `-h` or `--help` for availabe options.
+The utility `devutils/update_lists.py` automates this process. By default, it will update the `common` base bundle automatically. Pass in `-h` or `--help` for available options.
 
 Here's an example for updating the `common` configuration type:
 
@@ -89,3 +96,7 @@ If domain substitution is applied, then the steps for the initial update will no
 2. Follow the patch updating section above
 3. Reapply domain substitution: `python3 -m buildkit domains apply -b BUNDLE_PATH_HERE -c CACHE_PATH_HERE build/src`
 4. Reattempt build. Repeat steps as necessary.
+
+## Updating Debian patches and packaging files
+
+To add support for new Debian-based systems or update support, see [ungoogled-chromium-debian repo](https://github.com/ungoogled-software/ungoogled-chromium-debian) for info.
